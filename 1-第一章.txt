@@ -1,0 +1,520 @@
+
+快速排序算法模板 —— 模板题 AcWing 785. 快速排序
+void quick_sort(int q[], int l, int r)
+{
+    if (l >= r) return;
+
+    int i = l - 1, j = r + 1, x = q[l + r >> 1];
+    while (i < j)
+    {
+        do i ++ ; while (q[i] < x);
+        do j -- ; while (q[j] > x);
+        if (i < j) swap(q[i], q[j]);
+    }
+    quick_sort(q, l, j), quick_sort(q, j + 1, r);
+}
+
+归并排序算法模板 —— 模板题 AcWing 787. 归并排序
+void merge_sort(int q[], int l, int r)
+{
+    if (l >= r) return;
+
+    int mid = l + r >> 1;
+    merge_sort(q, l, mid);
+    merge_sort(q, mid + 1, r);
+
+    int k = 0, i = l, j = mid + 1;
+    while (i <= mid && j <= r)
+        if (q[i] < q[j]) tmp[k ++ ] = q[i ++ ];
+        else tmp[k ++ ] = q[j ++ ];
+
+    while (i <= mid) tmp[k ++ ] = q[i ++ ];
+    while (j <= r) tmp[k ++ ] = q[j ++ ];
+
+    for (i = l, j = 0; i <= r; i ++, j ++ ) q[i] = tmp[j];
+}
+
+下面是改进的版本
+void merge_sort(int q[], int l, int r) {
+    if (l >= r) return;
+    
+    int mid = l + (r - l) / 2; // 避免溢出的中间点计算
+    merge_sort(q, l, mid);
+    merge_sort(q, mid + 1, r);
+    
+    // 动态分配临时数组（避免全局变量）
+    int* tmp = (int*)malloc((r - l + 1) * sizeof(int));
+    if (!tmp) return; // 内存分配失败处理
+    
+    int k = 0, i = l, j = mid + 1;
+    while (i <= mid && j <= r) {
+        if (q[i] < q[j]) tmp[k++] = q[i++];
+        else tmp[k++] = q[j++];
+    }
+    while (i <= mid) tmp[k++] = q[i++];
+    while (j <= r) tmp[k++] = q[j++];
+    
+    for (i = l, j = 0; i <= r; i++, j++) q[i] = tmp[j];
+    
+    free(tmp); // 释放临时数组内存
+}
+
+
+/*
+
+###二分法（Binary Search）是一种基于分治策略的高效算法，其核心思想是通过不断缩小问题的规模，每次将搜索范围减少一半，从而快速逼近目标值。具体步骤如下：
+
+确定搜索范围：初始化左边界 left 和右边界 right，通常覆盖整个可能的解空间。
+计算中间点：取中间位置 mid = (left + right) / 2（或防止溢出的写法 mid = left + (right - left) / 2）。
+比较与决策：
+若中间元素满足特定条件（如等于目标值），直接返回结果。
+若不满足，根据中间元素与目标值的关系，舍弃不可能的一半解空间。
+缩小范围：调整左或右边界，进入下一轮迭代，直到找到解或范围为空。
+关键点：通过每次排除一半的可能性，时间复杂度从线性（O(n)）优化到对数级（O(log n)）
+
+###二分法的使用条件
+二分法并非万能，需满足以下条件才能有效应用：
+
+###有序性或单调性：
+显式有序：数据必须有序（如升序数组），才能通过比较中间值确定舍弃哪一半。
+隐式有序：问题隐含单调性（如求连续函数的根），或局部有序（如旋转数组）。
+可判定性：存在明确的判断条件，能够根据中间点的状态（如 mid 的值）确定目标值位于左半部分还是右半部分。
+例如，在查找目标值时，若 arr[mid] < target，则舍弃左半部分。
+明确边界：
+能够定义清晰的初始搜索范围（如 left=0, right=n-1），且范围可动态调整。
+存在唯一解（或特定解）：
+若存在多个解，需明确需要找到哪一个（如第一个或最后一个出现的位置）。
+*/
+
+
+
+整数二分算法模板 —— 模板题 AcWing 789. 数的范围
+模板1：用于左边界问题，mid 向下取整，调整右边界。
+模板2：用于右边界问题，mid 向上取整，调整左边界。
+根据问题的性质选择模板，并结合 check 函数设计逻辑。
+
+
+bool check(int x) {/* ... */} // 检查x是否满足某种性质
+
+// 区间[l, r]被划分成[l, mid]和[mid + 1, r]时使用：
+int bsearch_1(int l, int r)
+{
+    while (l < r)//只要是说left < right 是成立的 
+    {
+        int mid = ( l + r ) >> 1; // 相当于(left + right ) / 2;
+        if (check(mid)) r = mid;    // 满足性质就是说mid 的左半边是满足的但是这要看具体的题目这里是默认从左向右递增
+        else l = mid + 1; // 不满足条件就是就是右边的区间
+    }
+    return l; // 最后就可以找到这个区间或者说是一个数
+}
+//上面的mid这种写法存在爆int的问题mid = left +(left + right) / 2;//这是一种防御型写法
+// 区间[l, r]被划分成[l, mid - 1]和[mid, r]时使用：
+int bsearch_2(int l, int r)
+{
+    while (l < r)
+    {
+        int mid = (l + r + 1)>> 1;mid向上取整
+        if (check(mid)) l = mid;
+        else r = mid - 1;
+    }
+    return l;
+}
+/*
+这里要说一下什么时候向上取整什么时候向下取整：因为二分法的条件是有单调性或者说是有序地
+那么现在就判断一下这个中间值因为是是有序地所以说最右边的一定是这个区间的最大值，所以说
+只需要比较中间值与两边值的大小就可以判断正确的答案是在哪一边
+好的搞清楚了这个问题那么现在比较中间值是否满足条件就是显而易见的了：这是因为中间值可能是
+左边的最大值同样的页可能是右边的最小值，所以现在就要判断中间的值是不是满足这个条件，如果满足
+那就说明要包含中间值，否则就说明不可以包含中间值
+
+*/
+
+
+浮点数二分算法模板 —— 模板题 AcWing 790. 数的三次方根
+bool check(double x) {/* ... */} // 检查x是否满足某种性质
+
+double bsearch_3(double l, double r)
+{
+    const double eps = 1e-6;   // eps 表示精度，取决于题目对精度的要求
+    while (r - l > eps)
+    {
+        double mid = (l + r) / 2;
+        if (check(mid)) r = mid;
+        else l = mid;
+    }
+    return l;
+}
+
+
+高精度加法 —— 模板题 AcWing 791. 高精度加法
+// C = A + B, A >= 0, B >= 0
+vector<int> add(vector<int> &A, vector<int> &B)
+{
+    if (A.size() < B.size()) return add(B, A);
+
+    vector<int> C;
+    int t = 0;
+    for (int i = 0; i < A.size(); i ++ )
+    {
+        t += A[i];
+        if (i < B.size()) t += B[i];
+        C.push_back(t % 10);
+        t /= 10;
+    }
+
+    if (t) C.push_back(t);
+    return C;
+}
+
+高精度减法 —— 模板题 AcWing 792. 高精度减法
+// C = A - B, 满足A >= B, A >= 0, B >= 0
+vector<int> sub(vector<int> &A, vector<int> &B)
+{
+    vector<int> C;
+    for (int i = 0, t = 0; i < A.size(); i ++ )
+    {
+        t = A[i] - t;
+        if (i < B.size()) t -= B[i];
+        C.push_back((t + 10) % 10);
+        if (t < 0) t = 1;
+        else t = 0;
+    }
+
+    while (C.size() > 1 && C.back() == 0) C.pop_back();
+    return C;
+}
+
+高精度乘低精度 —— 模板题 AcWing 793. 高精度乘法
+// C = A * b, A >= 0, b > 0
+vector<int> mul(vector<int> &A, int b)
+{
+    vector<int> C;
+    int t = 0;
+    for (int i = 0; i < A.size() || t; i ++ )
+    {
+        if (i < A.size()) t += A[i] * b;
+        C.push_back(t % 10);
+        t /= 10;
+    }
+
+    return C;
+}
+
+高精度除以低精度 —— 模板题 AcWing 794. 高精度除法
+// A / b = C ... r, A >= 0, b > 0
+vector<int> div(vector<int> &A, int b, int &r)
+{
+    vector<int> C;
+    r = 0;
+    for (int i = A.size() - 1; i >= 0; i -- )
+    {
+        r = r * 10 + A[i];
+        C.push_back(r / b);
+        r %= b;
+    }
+    reverse(C.begin(), C.end());
+    while (C.size() > 1 && C.back() == 0) C.pop_back();
+    return C;
+}
+
+
+
+一维前缀和 —— 模板题 AcWing 795. 前缀和
+前缀和数组，前缀和这个算法的唯一一个作用就是快速求出任意一段区间的数字和
+要把s0定义成0，来处理边界，就是少一个if的判断
+举个例子就是现在我们要求1-10的前缀和那么带入公式就是S[10] - S[0],就是为了统一成下面的形式
+S[i] = a[1] + a[2] + ... a[i]
+a[l] + ... + a[r] = S[r] - S[l - 1]
+下面是这个一维数组前缀和的应用
+#inculde <iostream>
+using namespace std;
+const int N = 1000010;
+int a[N],S[N];
+int main () {
+    int n,m;
+    S[0] = 0 ;//将这个设置成0，是为了更好的套公式
+    scanf("%d%d",&n,&m);
+    for (int i = 1 ; i <= n ; i ++) scanf("%d",&a[i]);
+    //感觉上来说这里是可以用C++11的范围循环
+    for (int i = 1 ;i <= n; i ++ ) S[i] = S[i - 1] + a[i];//就可以直接这样写吗，以前想都没有想过
+    while (m--) {
+        int l ,r;
+        scanf("%d%d",&n,&m);
+        printf("%d\n",S[r] - S[l - 1]);
+    }
+    return 0;
+}   
+
+
+二维前缀和 —— 模板题 AcWing 796. 子矩阵的和
+S[i, j] = 第i行j列格子左上部分所有元素的和
+以(x1, y1)为左上角，(x2, y2)为右下角的子矩阵的和为：
+S[x2, y2] - S[x1 - 1, y2] - S[x2, y1 - 1] + S[x1 - 1, y1 - 1]
+//这里还是有一些容斥原理的思想
+下面是这个的应用
+求蓝色小正方形的面积
+
+#include <iostream>
+using namespace std;
+int a[N][N],S[N][N];//把正方形的面积跟边长设出来
+int main () {
+    int n,m,q;//定义三个数一个是，行一个是列，还有一个是循环的次数
+    scanf("%d %d %d",&n,&m,&q);
+    for (int i = 0 ; i <= n; i++) {
+        for (int j = 0; j <= m; j ++) {//遍历行和列，将二维数组输入其中
+            scanf("%d",&a[i][j]);
+        }
+    }
+    //这一步的操作就是生成二维前缀和数组
+    for (int i = 0 ; i <= n; i++) {
+        for (int j = 0; j <= m ; j++) {
+            S[i][j] = S[i - 1][j] + S[i][j - 1] +S[i - 1][j - 1] +a[i][j];//求前缀合
+        }
+    }
+    //求这个前缀和的思路就更上面的思路是一样的，等于左边的数加上上面的数再减去左上的数最后加上自己就是的
+    //这个的实现方法和思路上面的是一模一样的，简单！
+    while (q--) {
+        int x1,x2,y1,y2;
+        scanf("%d %d %d %d",&x1,&y1,&x2,&y2);
+        printf("%d\n",S[x2][y2] - S[x1 - 1][y2] - S[x2][y1 - 1] + S[x1 - 1][x2 - 1]);//求部分和
+    }
+    //现在就是来输出这个部分的和，其实就是把起始的位置和结束的位置稍微地改变了一下让这个方法更加的具有普遍性
+    return 0;
+}
+/*
+今天是2025年3月7日，现在学习了前缀和的技巧，这个技巧的主要操作就是，生成一个前缀和数组，而且数组里的每个元素
+都是从开始位置到这个数的前一个位置的所有数的和，就是求区间和的利器，在求一个区间的时候这个公式的运算为
+                s(i,r) = s(r) - s(i - 1)
+当然还有二维的前缀和的表示方法就是，求从左上角到指定元素的矩形里的所有数的和，这个可以用容斥原理的思维方式来解答
+这个方法的操作就是用范围循环，左边的数加上上面的数再减去左上的数最后再加上自己就可以求出到这个位置的所有的数的和
+理解起来还是简单的，就是要注意代码的实现过程。
+*/
+
+
+一维差分 —— 模板题 AcWing 797. 差分
+给区间[l, r]中的每个数加上c：
+下面的四个是一维差分的关键操作：
+                        B[l] += c ; 
+                        B[r + 1] -= c ;
+差分的含义：差分是通过端点修改快速处理数组区间增减操作的方法
+/*
+一维差分的操作其实是跟二维的差分是一样的，就是可以快速改变区间的和那么实现也是
+同样的简单，就是将开始的数加上目标的值还有目标位置的下一个数减去目标值，最后就只要进行一次
+时间复杂度和空间复杂度都是O(n)的前缀和就是的，easy！
+那么同样的在这个二维数组的两边加上一个0，这样的话就会省去很多的边界的讨论
+*/
+二维差分 —— 模板题 AcWing 798. 差分矩阵
+给以(x1, y1)为左上角，(x2, y2)为右下角的子矩阵中的所有元素加上c：
+下面的四个是二维差分的关键操作
+                        S[x1, y1] += c ; 
+                        S[x2 + 1, y1] -= c ;
+                        S[x1, y2 + 1] -= c ; 
+                        S[x2 + 1, y2 + 1] += c ;
+/*
+好的现在是2025年3月7日现在学习了二维差分，这个算法就是为了解决快速区间值的修改，并且实现这个的算法
+很简单就只要修改4个位置的值就可以将整个区间的值都加上一个数(可以是正数可以使负数)，现在给你两个点来
+表示一个矩形的左上角还有右下角，那么就将左上角的数和右下角的在下一个数加上x，将右上角右边的数和左下
+角下面的数减去x就可以简单的实现
+原理：
+就是把左上角的数还有右下角的下一个数加上x后就会直接影响整个右下的前缀和，影响的大小为2x，那么现在
+将左下角的下一个数和右上角的右边的数都减去x那么这个变化的范围就只有目标的范围了，很巧妙！！！！！！
+在写代码的时候很多时候都是将数据用一圈0包裹起来这样的话就可以避免很多的不必要的边界讨论
+*/
+
+
+
+双指针算法 —— 模板题 AcWIng 799. 最长连续不重复子序列, AcWing 800. 数组元素的目标和
+//这是双指针算法的通用模板先不管其他的把这个模板写上
+//双指针的核心思想就是优化一般来说双指针可以把复杂度为O(n^2)的算法给优化到O(n)
+for (int i = 0, j = 0; i < n; i ++ )
+{
+    while (j < i && check(i, j)) j ++ ;
+
+    // 具体问题的逻辑
+}
+将朴素的算法优化一下！！！！！
+简单的例子：先输入一个字符串把每个单词输出出来，是双指针算法的简单应用，还是有很多的漏洞的
+一般来说双指针算法就是暴力做法，然后就是考虑找条件之间的联系，优化一下这个代码
+#include <iostream>
+#include <string.h>
+using namespace std;
+int main () {
+    char str[1000];
+    gets(str);//这里用gets的话，是可以的，但是这会报一个不安全的错误
+    //要这样写：fgets(str,1000,stdin);这样就可以了
+    int n = strlen(str);
+    for (int i = 0; i < n; i++) {
+        int j = i;
+        while (j < i && str[j] != ' ' ) j ++;
+        for (int k = i; k < j; k++) cout << str[k];
+        cout << endl;
+        i = j;
+    }
+    return 0;
+}
+常见问题分类：
+    (1) 对于一个序列，用两个指针维护一段区间
+    (2) 对于两个序列，维护某种次序，比如归并排序中合并两个有序序列的操作
+/*
+#include <iostream>
+using namespace std;
+const int N = 100010;
+// 先定义两个数组分别来装总元素还有(哈希表，用来判断元素是否存在重复)
+int a[N], s[N];
+int main()
+{
+  int result = 0;
+  int n;
+  cin >> n;
+  for (int i = 0; i < n; i++)
+  {
+    cin >> a[i];
+  }
+  // 下面就是判断数字是否重复
+  /* 从左向右进行遍历，保证窗口处没有重复的元素，为什么之前的元素的出现次数都要减一呢？
+  这是因为要保证窗口内的元素只出现过过一次，就是保证窗口处的元素都是不重复的，如果不讲前面
+  出现过的数字的次数减一，那么后来又出现相同的数字时就不知道是哪里出现了重复
+  */
+  for (int left = 0, right = 0; right < n; right++)
+  {
+    s[a[right]]++;
+    while (s[a[right]] > 1)
+    {
+      s[a[left]]--;
+      left++;
+    }
+    result = max(result, right - left + 1);//这里是为了保留最大窗口的数值，如果出现了更大的窗口那么这个数字才会刷新
+  }
+  cout << result << endl;
+  return 0;
+}
+懂了，哈哈哈哈！当然这个最好还是用哈希表来做就会好做很多，用数组的话还是太粗暴了
+一点也不优雅[doge]
+*/
+
+
+
+位运算 —— 模板题 AcWing 801. 二进制中1的个数
+求n的二进制表示中第k位数字: n >> k & 1
+返回n的最后一位1：lowbit(n) = n & -n
+介绍几种最常见的操作
+求n的二进制表示中第k位数字 {
+    1.先把第k位一道最后一位
+    操作就是右移运算n >> k
+    2.看一下各位是几就是让 n & 1 这样就可以把个位的数字取出来了,展开就是n >> 0 & 1
+    把1还有2结合到一块就是这样的操作， n >> k & 1 
+}
+/*
+下面是这个的简单操作
+#include <iostream>
+using namespace std;
+
+int lowBit(int n);
+
+int main()
+{
+  int n;
+  cin >> n;
+  while (n--) {
+    int x;
+    cin >> x;
+    int res = 0;
+    while (x) {
+      x -= lowBit(x);
+      res++;
+    }
+    cout << res << endl;
+  }
+  return 0;
+}
+
+int lowBit(int n)
+{
+  return n & -n;
+}
+*/
+
+/*
+#include <iostream>
+using namespace std;
+
+int main()
+{
+  int n = 10;
+  unsigned int x = -n;
+  for (int i = 31; i >= 0; i--) {
+    cout << (x >> i & 1);
+  }
+
+    return 0;
+}
+*/
+插入的讲一下计算机中的三个码之间的关系
+计算机在实现的过程中是没有减法这个概念的，计算机使用补码来计算负数
+操作的关系：补码 = -（原码） + 1
+就是原码取反加一
+现在讲的是基础算法，要耐心一点
+
+
+
+
+离散化 —— 模板题 AcWing 802. 区间和
+核心概念
+离散化用于将大范围稀疏的整数映射到紧凑的连续索引，常见于处理值域大但操作数较少的场景（如区间和、点操作）
+这里是特指整数的离散化，值域比较大有的题目要用这个下标来做
+就是把这个范围较大的数映射到连续的数组来做
+下面举个例子来表示这个过程
+原数值 | 离散化索引（1-based）
+-------------------------
+1     → 1
+3     → 2
+100   → 3
+2000  → 4
+500000 →5
+这个过程就是叫做离散化
+问题：
+1.在元素组中可能有重复的元素
+2.如何算出原数组中数离散化后的值，就是找到x离散化的值，方法就是二分查找
+vector<int> alls; // 存储所有待离散化的值
+sort(alls.begin(), alls.end()); // 将所有值排序
+alls.erase(unique(alls.begin(), alls.end()), alls.end());   // 去掉重复元素
+就可以完成排序加上去重的操作
+
+// 二分求出x对应的离散化的值
+int find(int x) // 找到第一个大于等于x的位置
+{
+    int l = 0, r = alls.size() - 1;
+    while (l < r)
+    {
+        int mid = l + r >> 1;
+        if (alls[mid] >= x) r = mid;
+        else l = mid + 1;
+    }
+    return r + 1; // 映射到1, 2, ...n
+}
+
+
+
+
+
+区间合并 —— 模板题 AcWing 803. 区间合并
+// 将所有存在交集的区间合并
+void merge(vector<PII> &segs)
+{
+    vector<PII> res;
+
+    sort(segs.begin(), segs.end());
+
+    int st = -2e9, ed = -2e9;
+    for (auto seg : segs)
+        if (ed < seg.first)
+        {
+            if (st != -2e9) res.push_back({st, ed});
+            st = seg.first, ed = seg.second;
+        }
+        else ed = max(ed, seg.second);
+
+    if (st != -2e9) res.push_back({st, ed});
+
+    segs = res;
+}
